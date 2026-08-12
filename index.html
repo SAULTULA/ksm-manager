@@ -963,29 +963,12 @@
                 return;
             }
 
-            // ── Contexto Vercel: llama a GAS via JSONP (evita CORS) ──
-            if (!GAS_URL) {
-                loginError.querySelector('span').textContent = 'GAS_URL no configurada. Consultá las instrucciones.';
-                loginError.classList.add('show');
-                loginBtn.innerHTML = '<i class="ri-lock-unlock-fill"></i>&nbsp; Ingresar al Panel';
-                loginBtn.disabled = false;
-                return;
-            }
-
-            const cbName = 'ksmCb_' + Date.now();
-            const params = new URLSearchParams({ action: 'validateLogin', u: u, p: p, callback: cbName });
-            const script = document.createElement('script');
-
-            window[cbName] = function (res) {
-                delete window[cbName];
-                script.remove();
-                if (res && res.success) onLoginSuccess(res.name);
-                else onLoginFail();
-            };
-
-            script.onerror = () => { delete window[cbName]; script.remove(); onLoginFail(); };
-            script.src = GAS_URL + '?' + params.toString();
-            document.head.appendChild(script);
+            // ── Contexto Vercel: usa el proxy serverless /api/login (sin CORS) ──
+            const apiUrl = '/api/login?u=' + encodeURIComponent(u) + '&p=' + encodeURIComponent(p);
+            fetch(apiUrl)
+                .then(r => r.json())
+                .then(res => res && res.success ? onLoginSuccess(res.name) : onLoginFail())
+                .catch(() => onLoginFail());
         });
 
         btnLogout.addEventListener('click', () => {
