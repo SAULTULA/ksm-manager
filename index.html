@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel KSM Servicios - Entorno Dinámico</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <style>
+        /* ================= THEME SYSTEM (VARIABLES) ================= */
+        :root {
+            /* MAC DARK (DEFAULT) */
+            --sys-bg: rgba(30, 30, 30, 0.6);
+            --sys-sidebar: rgba(45, 45, 45, 0.4);
+            --sys-border: rgba(255, 255, 255, 0.15);
+            --sys-text: #f5f5f7;
+            --sys-muted: #86868b;
+            --sys-primary: #0A84FF;
+            --sys-primary-hover: #007aff;
+            --sys-radius: 12px;
+            --sys-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --wallpaper: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564');
+        }
+
+        body.mac-light {
+            --sys-bg: rgba(240, 240, 240, 0.7);
+            --sys-sidebar: rgba(220, 220, 220, 0.5);
+            --sys-border: rgba(0, 0, 0, 0.15);
+            --sys-text: #1a1a1a;
+            --sys-muted: #555555;
+            --sys-primary: #007aff;
+            --sys-primary-hover: #0056b3;
+            --wallpaper: url('https://images.unsplash.com/photo-1542382257-8024cb83c23d?q=80&w=2564');
+            /* Light abstract */
+        }
+
+        body.mac-vibrant {
+            --sys-bg: rgba(10, 10, 30, 0.5);
+            --sys-sidebar: rgba(255, 255, 255, 0.1);
+            --sys-border: rgba(255, 255, 255, 0.25);
+            --sys-text: #ffffff;
+            --sys-muted: #e0e0e0;
+            --sys-primary: #ff2a6d;
+            --sys-primary-hover: #d11a54;
+            --wallpaper: url('https://images.unsplash.com/photo-1558244243-ea33b5cdafe5?q=80&w=2564');
+            /* Vibrant Pink/Blue */
+        }
+
+        body.linux-ubuntu {
+            --sys-bg: rgba(44, 0, 30, 0.85);
+            /* Aubergine */
+            --sys-sidebar: rgba(48, 10, 36, 0.95);
+            --sys-border: rgba(255, 255, 255, 0.1);
+            --sys-text: #ffffff;
+            --sys-muted: #aea79f;
+            --sys-primary: #e95420;
+            /* Ubuntu Orange */
+            --sys-primary-hover: #c74316;
+            --sys-radius: 8px;
+            --sys-font: "Ubuntu", "Segoe UI", sans-serif;
+            --wallpaper: url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2670');
+        }
+
+        body.linux-kali {
+            --sys-bg: rgba(10, 10, 10, 0.95);
+            --sys-sidebar: rgba(15, 15, 15, 0.98);
+            --sys-border: #32ff00;
+            --sys-text: #32ff00;
+            /* Neon hacker green */
+            --sys-muted: #1e9900;
+            --sys-primary: #32ff00;
+            --sys-primary-hover: #45ff19;
+            --sys-radius: 0px;
+            --sys-font: "Courier New", Courier, monospace;
+            --wallpaper: none;
+            background-color: #000 !important;
+        }
+
+        body.linux-plasma {
+            --sys-bg: rgba(35, 38, 41, 0.85);
+            --sys-sidebar: rgba(49, 54, 59, 1);
+            --sys-border: rgba(0, 0, 0, 0.5);
+            --sys-text: #eff0f1;
+            --sys-muted: #bdc3c7;
+            --sys-primary: #3daee9;
+            /* Breeze Blue */
+            --sys-primary-hover: #2980b9;
+            --sys-radius: 4px;
+            --sys-font: "Noto Sans", sans-serif;
+            --wallpaper: url('https://images.unsplash.com/photo-1618005191244-db46be326f58?q=80&w=2564');
+            /* Dark blue geo */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--sys-font);
+            background: var(--wallpaper) center/cover fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--sys-text);
+            overflow: hidden;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(128, 128, 128, 0.5);
+            border-radius: 10px;
+        }
+
+        /* ================= MAIN WINDOW ================= */
+        .system-window {
+            width: 95%;
+            max-width: 1400px;
+            height: 90vh;
+            background: var(--sys-bg);
+            backdrop-filter: blur(35px) saturate(180%);
+            -webkit-backdrop-filter: blur(35px) saturate(180%);
+            border-radius: var(--sys-radius);
+            border: 1px solid var(--sys-border);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+
+        /* TITLEBAR */
+        .titlebar {
+            height: 52px;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--sys-border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+            width: 150px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .dot.red {
+            background: #ff5f56;
+            border: 1px solid #e0443e;
+        }
+
+        .dot.yellow {
+            background: #ffbd2e;
+            border: 1px solid #dea123;
+        }
+
+        .dot.green {
+            background: #27c93f;
+            border: 1px solid #1aab29;
+        }
+
+        /* Modificadores de controles según SO */
+        body.linux-ubuntu .traffic-lights {
+            order: 3;
+            justify-content: flex-end;
+        }
+
+        body.linux-ubuntu .dot {
+            background: #444;
+            border: 1px solid #333;
+        }
+
+        body.linux-ubuntu .dot:hover {
+            background: var(--sys-primary);
+        }
+
+        body.linux-ubuntu .toolbar-right {
+            order: 1;
+            justify-content: flex-start;
+        }
+
+        body.linux-kali .traffic-lights {
+            display: none;
+        }
+
+        /* En terminal no hay lucecitas */
+        body.linux-kali .system-window {
+            box-shadow: 0 0 20px rgba(50, 255, 0, 0.2);
+        }
+
+        body.linux-plasma .dot {
+            border-radius: 2px;
+        }
+
+        /* Cuadrados sutiles */
+
+        .url-bar {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            order: 2;
+        }
+
+        .url-input {
+            background: rgba(128, 128, 128, 0.15);
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 6px;
+            padding: 4px 16px;
+            color: var(--sys-text);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 450px;
+            justify-content: center;
+        }
+
+        .toolbar-right {
+            width: 150px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            color: var(--sys-muted);
+            font-size: 1.1rem;
+            order: 3;
+        }
+
+        /* ================= MAIN LAYOUT ================= */
+        .app-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background: var(--sys-sidebar);
+            border-right: 1px solid var(--sys-border);
+            padding: 1.5rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-section {
+            padding-left: 12px;
+            font-size: 0.7rem;
+            color: var(--sys-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+
+        .nav-item {
+            padding: 8px 12px;
+            color: var(--sys-text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-item i {
+            color: var(--sys-primary);
+            font-size: 1.1rem;
+        }
+
+        .nav-item.active {
+            background: var(--sys-primary);
+            color: #fff !important;
+        }
+
+        .nav-item.active i {
+            color: #fff !important;
+        }
+
+        .nav-item:not(.active):hover {
+            background: rgba(128, 128, 128, 0.15);
+        }
+
+        body.linux-kali .nav-item.active {
+            background: transparent;
+            border-left: 3px solid var(--sys-primary);
+            color: var(--sys-primary) !important;
+            filter: brightness(1.5);
+        }
+
+        body.mac-light .nav-item.active {
+            color: white !important;
+        }
+
+        /* WORKSPACE */
+        .workspace {
+            flex: 1;
+            padding: 2.5rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .view {
+            display: none;
+            margin-bottom: 40px;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeMac 0.3s ease;
+        }
+
+        @keyframes fadeMac {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ================= FORMS & INPUTS ================= */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--sys-border);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .sys-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sys-form-group label {
+            font-size: 0.85rem;
+            color: var(--sys-muted);
+            font-weight: 600;
+        }
+
+        .sys-input,
+        .sys-select,
+        .sys-textarea {
+            background: rgba(128, 128, 128, 0.1);
+            border: 1px solid var(--sys-border);
+            border-radius: 6px;
+            padding: 9px 12px;
+            color: var(--sys-text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .sys-input:focus,
+        .sys-select:focus,
+        .sys-textarea:focus {
+            outline: none;
+            border-color: var(--sys-primary);
+            box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.2);
+        }
+
+        body.linux-kali .sys-input:focus {
+            background: rgba(50, 255, 0, 0.1);
+            box-shadow: none;
+            border-color: #32ff00;
+        }
+
+        .sys-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        option {
+            background: var(--sys-bg);
+            color: var(--sys-text);
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .sys-btn {
+            background: var(--sys-primary);
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .sys-btn:hover {
+            background: var(--sys-primary-hover);
+            filter: brightness(1.1);
+        }
+
+        body.linux-kali .sys-btn {
+            background: transparent;
+            color: var(--sys-primary);
+            border: 1px solid var(--sys-primary);
+        }
+
+        body.linux-kali .sys-btn:hover {
+            background: var(--sys-primary);
+            color: #000;
+        }
+
+        .sys-btn-secondary {
+            background: rgba(128, 128, 128, 0.15);
+            color: var(--sys-text);
+            border: 1px solid var(--sys-border);
+        }
+
+        .sys-btn-secondary:hover {
+            background: rgba(128, 128, 128, 0.25);
+            color: var(--sys-text);
+        }
+
+        /* ================= TABLES ================= */
+        .sys-table-wrapper {
+            background: rgba(128, 128, 128, 0.05);
+            border: 1px solid var(--sys-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sys-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .sys-table th {
+            background: rgba(128, 128, 128, 0.1);
+            padding: 12px 16px;
+            font-size: 0.8rem;
+            color: var(--sys-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--sys-border);
+        }
+
+        .sys-table td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--sys-border);
+        }
+
+        .sys-table tbody tr:hover {
+            background: rgba(128, 128, 128, 0.08);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: rgba(48, 209, 88, 0.2);
+            color: #30d158;
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+
+        .badge.warning {
+            background: rgba(255, 159, 10, 0.2);
+            color: #ff9f0a;
+            border: 1px solid rgba(255, 159, 10, 0.3);
+        }
+
+        body.linux-kali .badge {
+            border-radius: 0;
+            background: transparent;
+            border: 1px solid;
+        }
+
+        /* Toast */
+        .sys-toast {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: var(--sys-sidebar);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--sys-border);
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: var(--sys-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+
+        .sys-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="system-window">
+        <!-- Título y Controles -->
+        <div class="titlebar">
+            <div class="traffic-lights">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+            </div>
+            <div class="url-bar">
+                <div class="url-input">
+                    <i class="ri-lock-fill"></i> ksm.manager.local
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <i class="ri-sidebar-unfold-line"></i>
+                <i class="ri-settings-5-line"></i>
+            </div>
+        </div>
+
+        <!-- Cuerpo de la aplicación -->
+        <div class="app-body">
+            <!-- Barra lateral -->
+            <aside class="sidebar">
+                <div class="sidebar-section">Gestión KSM</div>
+                <a class="nav-item active" data-target="view-planilla"><i class="ri-file-add-line"></i> Nueva
+                    Planilla</a>
+                <a class="nav-item" data-target="view-directorio"><i class="ri-folder-user-line"></i> Directorio</a>
+
+                <div class="sidebar-section">Sistema</div>
+                <a class="nav-item" data-target="view-config"><i class="ri-settings-4-line"></i> Preferencias</a>
+            </aside>
+
+            <!-- Área de Trabajo Central -->
+            <main class="workspace">
+
+                <!-- VISTA 1: NUEVA PLANILLA -->
+                <div id="view-planilla" class="view active">
+                    <form id="planillaForm">
+                        <!-- SECCIÓN 1: DATOS DEL CLIENTE -->
+                        <h3 class="section-title">Datos del Cliente</h3>
+                        <div class="form-grid">
+                            <div class="sys-form-group"><label>Razón Social / Nombre</label><input type="text"
+                                    name="IDCliente / Razón Social" class="sys-input" required></div>
+                            <div class="sys-form-group"><label>CUIT / CUIL</label><input type="text" name="CUIT / CUIL"
+                                    class="sys-input"></div>
+                            <div class="sys-form-group"><label>Contacto (Tel / Email)</label><input type="text"
+                                    name="Contacto (Tel / Email)" class="sys-input"></div>
+                        </div>
+
+                        <!-- SECCIÓN 2: DATOS WEB -->
+                        <h3 class="section-title">Proyecto Web y Pagos</h3>
+                        <div class="form-grid">
+                            <div class="sys-form-group">
+                                <label>Plan Contratado</label>
+                                <select name="Plan Contratado" class="sys-select" id="campoPlan">
+                                    <option value="Vacío">-- Seleccionar Plan --</option>
+                                    <option value="Básica + PWA">Plan Básica + App PWA</option>
+                                    <option value="Autoadministrable + PWA">Plan Avanzado Autoadministrable + App PWA
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="sys-form-group">
+                                <label>Estado Desarrollo</label>
+                                <select name="Estado Desarrollo" class="sys-select">
+                                    <option>En Espera / Relevamiento</option>
+                                    <option>En Desarrollo</option>
+                                    <option>Entregado/Finalizado</option>
+                                </select>
+                            </div>
+                            <div class="sys-form-group"><label>Monto Web ($)</label><input type="number"
+                                    name="Monto Web ($)" id="campoMonto" class="sys-input"></div>
+                            <div class="sys-form-group">
+                                <label>Estado Pago Web</label>
+                                <select name="Estado Pago Web" class="sys-select">
+                                    <option>Señado (50%)</option>
+                                    <option>Abonado 100%</option>
+                                    <option>Deuda Pendiente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 3: INFRAESTRUCTURA Y DOMINIO -->
+                        <h3 class="section-title">Dominio e Infraestructura</h3>
+                        <div class="form-grid">
+                            <div class="sys-form-group"><label>Dominio .com.ar</label><input type="text"
+                                    name="Dominio (.com.ar)" class="sys-input"></div>
+                            <div class="sys-form-group"><label>Gestiona KSM?</label><select name="Gestiona KSM"
+                                    class="sys-select">
+                                    <option>Sí - Lo registramos</option>
+                                    <option>No - Externo</option>
+                                </select></div>
+                            <div class="sys-form-group"><label>Vencimiento Dominio</label><input type="date"
+                                    name="Vencimiento Dominio" class="sys-input"></div>
+                            <div class="sys-form-group"><label>URL Hosting</label><input type="text" name="URL Hosting"
+                                    class="sys-input"></div>
+                        </div>
+
+                        <!-- SECCIÓN 4: ACCESOS ADMIN -->
+                        <h3 class="section-title">Credenciales Admin</h3>
+                        <div class="form-grid">
+                            <div class="sys-form-group"><label>URL Admin Panel</label><input type="text"
+                                    name="URL Admin Panel" class="sys-input"></div>
+                            <div class="sys-form-group"><label>Usuario Admin</label><input type="text"
+                                    name="Usuario Admin" class="sys-input"></div>
+                            <div class="sys-form-group"><label>Contraseña Admin</label><input type="text"
+                                    name="Contraseña Admin" class="sys-input"></div>
+                        </div>
+
+                        <!-- SECCIÓN 5: MANTENIMIENTO -->
+                        <h3 class="section-title">Abono y Mantenimiento</h3>
+                        <div class="form-grid">
+                            <div class="sys-form-group"><label>Fin Garantía</label><input type="date"
+                                    name="Fin Garantía (30d)" class="sys-input"></div>
+                            <div class="sys-form-group">
+                                <label>Plan Mantenimiento</label>
+                                <select name="Plan Mantenimiento" class="sys-select">
+                                    <option>Sin Abono</option>
+                                    <option>Abono Preventivo</option>
+                                    <option>Abono Activo de Gestión</option>
+                                </select>
+                            </div>
+                            <div class="sys-form-group"><label>Monto Abono</label><input type="number"
+                                    name="Monto Abono ($)" class="sys-input"></div>
+                            <div class="sys-form-group">
+                                <label>Estado Abono Mes</label>
+                                <select name="Estado Abono Mes" class="sys-select">
+                                    <option>Al día</option>
+                                    <option>Moroso / Impago</option>
+                                    <option>No aplica</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 6: NOTAS -->
+                        <h3 class="section-title">Observaciones Especiales</h3>
+                        <div class="sys-form-group"><textarea name="Notas / Observaciones"
+                                class="sys-textarea"></textarea></div>
+
+                        <div class="form-actions">
+                            <button type="button" class="sys-btn sys-btn-secondary"
+                                onclick="document.getElementById('planillaForm').reset()">Limpiar</button>
+                            <button type="submit" class="sys-btn" id="btnSubmit"><i class="ri-save-line"></i> Guardar
+                                Ficha</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- VISTA 2: DIRECTORIO FUNCIONAL -->
+                <div id="view-directorio" class="view">
+                    <h2 class="section-title">Directorio de Clientes</h2>
+                    <div class="sys-table-wrapper">
+                        <table class="sys-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plan & Desarrollo</th>
+                                    <th>Dominio</th>
+                                    <th>Abonos Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody id="directoryTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VISTA 3: CONFIGURACIÓN / PREFERENCIAS -->
+                <div id="view-config" class="view">
+
+                    <h2 class="section-title">Apariencia del Entorno</h2>
+                    <div class="form-grid">
+                        <div class="sys-form-group">
+                            <label>Temas de Sistema Operativo</label>
+                            <select id="themeSelector" class="sys-select">
+                                <optgroup label="MacOS">
+                                    <option value="mac-dark">Mac OS Dark (Ventura)</option>
+                                    <option value="mac-light">Mac OS Light (Monterey)</option>
+                                    <option value="mac-vibrant">Mac OS Vibrant (Big Sur)</option>
+                                </optgroup>
+                                <optgroup label="Linux">
+                                    <option value="linux-ubuntu">Ubuntu (Yaru Theme)</option>
+                                    <option value="linux-plasma">KDE Plasma (Breeze)</option>
+                                    <option value="linux-kali">Kali Linux (Terminal Script)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h2 class="section-title" style="margin-top: 40px;">Listas de Precios (Automatización)</h2>
+                    <p style="color: var(--sys-muted); margin-bottom: 20px; font-size: 0.9rem;">Estos valores se
+                        autocompletarán cuando selecciones un plan en la ficha "Nueva Planilla".</p>
+
+                    <div class="form-grid">
+                        <div class="sys-form-group">
+                            <label>Precio: Plan Básica + PWA ($)</label>
+                            <input type="number" id="cfgPrecioBasica" class="sys-input" value="330000">
+                        </div>
+                        <div class="sys-form-group">
+                            <label>Precio: Plan Autoadministrable ($)</label>
+                            <input type="number" id="cfgPrecioAvanzado" class="sys-input" value="620000">
+                        </div>
+                        <div class="sys-form-group" style="justify-content: flex-end;">
+                            <button type="button" id="btnSaveConfig" class="sys-btn"><i class="ri-save-3-line"></i>
+                                Guardar Ajustes</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Toast Notifications -->
+                <div id="toast" class="sys-toast"><i class="ri-information-fill"></i> <span></span></div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        /* ================= GESTIÓN DE CONFIGURACIONES LOCALES ================= */
+
+        // 1. Selector de Temas
+        const themeSelector = document.getElementById('themeSelector');
+        function applyTheme(themeName) {
+            document.body.className = themeName;
+            localStorage.setItem('ksm_theme', themeName);
+        }
+        themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+
+        // Restaurar Tema
+        const savedTheme = localStorage.getItem('ksm_theme') || 'mac-dark';
+        themeSelector.value = savedTheme;
+        applyTheme(savedTheme);
+
+        // 2. Valores y Precios Predeterminados
+        const cfgBasica = document.getElementById('cfgPrecioBasica');
+        const cfgAvanzado = document.getElementById('cfgPrecioAvanzado');
+        const btnSaveConfig = document.getElementById('btnSaveConfig');
+        const campoPlan = document.getElementById('campoPlan');
+        const campoMonto = document.getElementById('campoMonto');
+
+        // Restaurar precios al abrir
+        if (localStorage.getItem('ksm_price_basica')) cfgBasica.value = localStorage.getItem('ksm_price_basica');
+        if (localStorage.getItem('ksm_price_avanzado')) cfgAvanzado.value = localStorage.getItem('ksm_price_avanzado');
+
+        // Guardar nuevos precios base
+        btnSaveConfig.addEventListener('click', () => {
+            localStorage.setItem('ksm_price_basica', cfgBasica.value);
+            localStorage.setItem('ksm_price_avanzado', cfgAvanzado.value);
+            showToast('Tus listas de precios fueron almacenadas localmente.', 'success');
+        });
+
+        // Autocompletar cuando se elige un plan
+        campoPlan.addEventListener('change', () => {
+            const val = campoPlan.value;
+            if (val.includes('Básica')) campoMonto.value = localStorage.getItem('ksm_price_basica') || cfgBasica.value || 330000;
+            if (val.includes('Autoadministrable')) campoMonto.value = localStorage.getItem('ksm_price_avanzado') || cfgAvanzado.value || 620000;
+        });
+
+
+        /* ================= NAVEGACIÓN SPA ================= */
+        document.querySelectorAll('.nav-item').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+                link.classList.add('active');
+                const targetView = link.getAttribute('data-target');
+                document.getElementById(targetView).classList.add('active');
+
+                if (targetView === 'view-directorio') loadDirectory();
+            });
+        });
+
+        /* ================= FORMULARIO & GOOGLE SCRIPT ================= */
+        const form = document.getElementById('planillaForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const originalText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="ri-loader-line ri-spin"></i> Guardando...';
+            btnSubmit.disabled = true;
+
+            const formData = new FormData(form);
+            const clientData = {};
+            for (let [key, value] of formData.entries()) clientData[key] = value;
+
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler((response) => {
+                        btnSubmit.innerHTML = originalText; btnSubmit.disabled = false;
+                        if (response && response.success) { showToast('Ficha registrada en Google Sheets', 'success'); form.reset(); }
+                        else showToast('Error: ' + response.error, 'error');
+                    }).withFailureHandler((err) => {
+                        btnSubmit.innerHTML = originalText; btnSubmit.disabled = false;
+                        showToast('Falla de red: ' + err.message, 'error');
+                    }).saveClient(clientData);
+            } else {
+                setTimeout(() => {
+                    showToast('[MODO LOCAL PC] Ficha procesada correctamente.', 'success');
+                    btnSubmit.innerHTML = originalText; btnSubmit.disabled = false;
+                }, 1000);
+            }
+        });
+
+        /* ================= DIRECTORIO ================= */
+        function loadDirectory() {
+            const tbody = document.getElementById('directoryTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 30px;"><i class="ri-loader-line ri-spin"></i> Conectando al Servidor de KSM...</td></tr>';
+
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler((response) => {
+                        if (response && response.success) renderTable(response.data);
+                        else tbody.innerHTML = `<tr><td colspan="4">Error de base de datos: ${response.error}</td></tr>`;
+                    }).withFailureHandler((err) => {
+                        tbody.innerHTML = `<tr><td colspan="4">Error de conexión: ${err.message}</td></tr>`;
+                    }).getClients();
+            } else {
+                setTimeout(() => {
+                    renderTable([{
+                        'IDCliente / Razón Social': 'Prueba Local SRL', 'CUIT / CUIL': '30712345678',
+                        'Plan Contratado': 'Autoadministrable + PWA', 'Estado Desarrollo': 'En Desarrollo',
+                        'Dominio (.com.ar)': 'ksmprueba.com.ar', 'Estado Pago Web': 'Señado (50%)', 'Estado Abono Mes': 'No aplica'
+                    }]);
+                }, 800);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('directoryTableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--sys-muted);">No hay clientes registrados de momento.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(c => `
+        <tr>
+          <td><strong>${c['IDCliente / Razón Social'] || 'S/D'}</strong><br><span style="color: var(--sys-muted); font-size: 0.8rem;">CUIT: ${c['CUIT / CUIL'] || '-'}</span></td>
+          <td>${c['Plan Contratado'] || '-'}<br><span style="font-size:0.8rem; color:var(--sys-primary);">${c['Estado Desarrollo'] || ''}</span></td>
+          <td>${c['Dominio (.com.ar)'] || '-'}</td>
+          <td>
+            <span class="badge ${c['Estado Pago Web'] === 'Abonado 100%' ? 'success' : 'warning'}">${c['Estado Pago Web'] || 'Pendiente'}</span>
+            <span class="badge ${c['Estado Abono Mes'] === 'Al día' ? 'success' : 'warning'}">${c['Estado Abono Mes'] || 'Sin Abono'}</span>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        /* ================= UTILS ================= */
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const icon = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+            toast.innerHTML = `<i class="${icon}" style="color:${type === 'success' ? '#30d158' : '#ff5f56'}"></i> <span>${message}</span>`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+
+</html>
