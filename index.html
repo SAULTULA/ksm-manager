@@ -550,10 +550,148 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        /* ================= LOGIN SCREEN ================= */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--wallpaper) center/cover fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.5s ease;
+        }
+
+        #login-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            background: rgba(30, 30, 30, 0.65);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: fadeMac 0.5s ease;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo .logo-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--sys-primary);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
+        }
+
+        .login-logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--sys-text);
+            margin-bottom: 4px;
+        }
+
+        .login-logo p {
+            font-size: 0.85rem;
+            color: var(--sys-muted);
+        }
+
+        .login-form .sys-form-group {
+            margin-bottom: 16px;
+        }
+
+        .login-form .sys-form-group label {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .login-error {
+            background: rgba(255, 95, 86, 0.15);
+            border: 1px solid rgba(255, 95, 86, 0.4);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #ff5f56;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-error.show {
+            display: flex;
+        }
+
+        .login-form .sys-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: var(--sys-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: #ff5f56;
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- ===== LOGIN OVERLAY ===== -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="logo-icon"><i class="ri-building-2-fill" style="color:#fff"></i></div>
+                <h1>KSM Servicios</h1>
+                <p>Acceso Restringido &mdash; Panel de Gestión</p>
+            </div>
+            <div class="login-error" id="login-error">
+                <i class="ri-error-warning-fill"></i>
+                <span>Usuario o contraseña incorrectos.</span>
+            </div>
+            <form class="login-form" id="loginForm" autocomplete="off">
+                <div class="sys-form-group">
+                    <label>Usuario</label>
+                    <input id="login-user" type="text" class="sys-input" placeholder="Tu usuario" required autofocus>
+                </div>
+                <div class="sys-form-group">
+                    <label>Contraseña</label>
+                    <input id="login-pass" type="password" class="sys-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="sys-btn"><i class="ri-lock-unlock-fill"></i>&nbsp; Ingresar al
+                    Panel</button>
+            </form>
+        </div>
+    </div>
 
     <div class="system-window">
         <!-- Título y Controles -->
@@ -569,6 +707,8 @@
             <div class="toolbar-right">
                 <i class="ri-sidebar-unfold-line"></i>
                 <i class="ri-settings-5-line"></i>
+                <button class="btn-logout" id="btnLogout" title="Cerrar sesión"><i
+                        class="ri-logout-box-r-line"></i></button>
             </div>
         </div>
 
@@ -769,6 +909,88 @@
     </div>
 
     <script>
+        /* ================= LOGIN SYSTEM (Autenticación via GAS) ================= */
+
+        // ⚠️ SOLO PARA VERCEL: Pegá aquí la URL de tu Web App de Google Apps Script.
+        // Ejemplo: 'https://script.google.com/macros/s/AKfycb.../exec'
+        // Si el panel corre directamente desde GAS (/exec), dejá esto vacío.
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwk55NLa7X08I8G4HHY0w2Jo_HdHA0dRtzIk7p1E3mZmmJPwfWAo5Wd_LIjsr2X8tsccQ/exec';
+
+        const loginOverlay = document.getElementById('login-overlay');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('login-error');
+        const btnLogout = document.getElementById('btnLogout');
+        const loginBtn = loginForm.querySelector('button[type="submit"]');
+
+        function checkSession() {
+            if (sessionStorage.getItem('ksm_auth') === 'true') {
+                loginOverlay.classList.add('hidden');
+            }
+        }
+
+        function onLoginSuccess(name) {
+            sessionStorage.setItem('ksm_auth', 'true');
+            sessionStorage.setItem('ksm_user_name', name);
+            loginError.classList.remove('show');
+            loginOverlay.style.opacity = '0';
+            setTimeout(() => loginOverlay.classList.add('hidden'), 500);
+            loginBtn.innerHTML = '<i class="ri-lock-unlock-fill"></i>&nbsp; Ingresar al Panel';
+            loginBtn.disabled = false;
+        }
+
+        function onLoginFail() {
+            loginError.classList.add('show');
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-pass').focus();
+            loginBtn.innerHTML = '<i class="ri-lock-unlock-fill"></i>&nbsp; Ingresar al Panel';
+            loginBtn.disabled = false;
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value;
+            loginBtn.innerHTML = '<i class="ri-loader-line ri-spin"></i>&nbsp; Verificando...';
+            loginBtn.disabled = true;
+            loginError.classList.remove('show');
+
+            // ── Contexto GAS (/exec): usa google.script.run (más seguro, directo) ──
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(res => res && res.success ? onLoginSuccess(res.name) : onLoginFail())
+                    .withFailureHandler(() => onLoginFail())
+                    .validateLogin(u, p);
+                return;
+            }
+
+            // ── Contexto Vercel: llama a GAS como API externa via fetch ──
+            if (!GAS_URL) {
+                loginError.querySelector('span').textContent = 'GAS_URL no configurada. Consultá las instrucciones.';
+                loginError.classList.add('show');
+                loginBtn.innerHTML = '<i class="ri-lock-unlock-fill"></i>&nbsp; Ingresar al Panel';
+                loginBtn.disabled = false;
+                return;
+            }
+
+            const apiUrl = `${GAS_URL}?action=validateLogin&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+            fetch(apiUrl)
+                .then(r => r.json())
+                .then(res => res && res.success ? onLoginSuccess(res.name) : onLoginFail())
+                .catch(() => onLoginFail());
+        });
+
+        btnLogout.addEventListener('click', () => {
+            sessionStorage.removeItem('ksm_auth');
+            sessionStorage.removeItem('ksm_user_name');
+            loginOverlay.style.opacity = '1';
+            loginOverlay.classList.remove('hidden');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+        });
+
+        // Verificar sesión al cargar la página
+        checkSession();
+
         /* ================= GESTIÓN DE CONFIGURACIONES LOCALES ================= */
 
         // 1. Selector de Temas
