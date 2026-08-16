@@ -1063,10 +1063,18 @@
                         showToast('Falla de red: ' + err.message, 'error');
                     }).saveClient(clientData);
             } else {
-                setTimeout(() => {
-                    showToast('[MODO LOCAL PC] Ficha procesada correctamente.', 'success');
+                fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clientData)
+                }).then(r => r.json()).then(res => {
                     btnSubmit.innerHTML = originalText; btnSubmit.disabled = false;
-                }, 1000);
+                    if (res && res.success) { showToast('Ficha registrada correctamente', 'success'); form.reset(); }
+                    else showToast('Error: ' + res.error, 'error');
+                }).catch(err => {
+                    btnSubmit.innerHTML = originalText; btnSubmit.disabled = false;
+                    showToast('Error de red: ' + err.message, 'error');
+                });
             }
         });
 
@@ -1084,13 +1092,14 @@
                         tbody.innerHTML = `<tr><td colspan="4">Error de conexión: ${err.message}</td></tr>`;
                     }).getClients();
             } else {
-                setTimeout(() => {
-                    renderTable([{
-                        'IDCliente / Razón Social': 'Prueba Local SRL', 'CUIT / CUIL': '30712345678',
-                        'Plan Contratado': 'Autoadministrable + PWA', 'Estado Desarrollo': 'En Desarrollo',
-                        'Dominio (.com.ar)': 'ksmprueba.com.ar', 'Estado Pago Web': 'Señado (50%)', 'Estado Abono Mes': 'No aplica'
-                    }]);
-                }, 800);
+                fetch('/api/clients')
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.success) renderTable(res.data);
+                        else tbody.innerHTML = `<tr><td colspan="4">Error de base de datos: ${res.error}</td></tr>`;
+                    }).catch(err => {
+                        tbody.innerHTML = `<tr><td colspan="4">Error de conexión: ${err.message}</td></tr>`;
+                    });
             }
         }
 
